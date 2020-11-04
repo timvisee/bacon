@@ -33,6 +33,14 @@ pub struct Args {
     #[argh(switch, short = 'c')]
     pub clippy: bool,
 
+    /// whether to run with `--no-default-features`
+    #[argh(switch)]
+    pub no_default_features: bool,
+
+    /// run with given `--features`
+    #[argh(option)]
+    pub features: Vec<String>,
+
     #[argh(positional)]
     /// path to the root folder of the Rust project
     pub root: Option<PathBuf>,

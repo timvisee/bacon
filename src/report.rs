@@ -52,16 +52,31 @@ impl Report {
         Ok(Report { warnings, errors })
     }
 
-    pub fn compute(root_dir: &Path, use_clippy: bool) -> Result<Report> {
+    pub fn compute(
+        root_dir: &Path,
+        use_clippy: bool,
+        no_default_features: bool,
+        features: &[String],
+    ) -> Result<Report> {
         let command = if use_clippy { "clippy" } else { "check" };
         debug!("starting cargo {}", command);
-        let output = Command::new("cargo")
+
+        let mut process = Command::new("cargo");
+        process
             .arg(command)
             .arg("--color")
             .arg("always")
-            .current_dir(root_dir)
+            .current_dir(root_dir);
+        if no_default_features {
+            process.arg("--no-default-features");
+        }
+        for feature in features {
+            process.arg("--features").arg(feature);
+        }
+        let output = process
             .output()
             .with_context(|| format!("Failed to run cargo {}", command))?;
+
         debug!("cargo {} finished", command);
         debug!("status: {:?}", &output.status);
         let report = Report::try_from(&output.stderr)?;

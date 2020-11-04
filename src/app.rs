@@ -20,7 +20,7 @@ use {
 };
 
 pub fn run(w: &mut W, args: Args) -> Result<()> {
-    let root_dir = args.root.unwrap_or_else(||env::current_dir().unwrap());
+    let root_dir = args.root.unwrap_or_else(|| env::current_dir().unwrap());
     let root_dir: PathBuf = fs::canonicalize(&root_dir)?;
     debug!("root_dir: {:?}", &root_dir);
     let src_dir = root_dir.join("src");
@@ -42,7 +42,12 @@ pub fn run(w: &mut W, args: Args) -> Result<()> {
     let event_source = EventSource::new()?;
     let user_events = event_source.receiver();
     state.draw(w)?;
-    state.report = Some(Report::compute(&root_dir, args.clippy)?);
+    state.report = Some(Report::compute(
+        &root_dir,
+        args.clippy,
+        args.no_default_features,
+        &args.features,
+    )?);
     state.computing = false;
     state.draw(w)?;
 
@@ -59,7 +64,12 @@ pub fn run(w: &mut W, args: Args) -> Result<()> {
     watcher.watch(src_dir, RecursiveMode::Recursive)?;
     watcher.watch(cargo_toml_file, RecursiveMode::NonRecursive)?;
 
-    let computer = Computer::new(root_dir, args.clippy)?;
+    let computer = Computer::new(
+        root_dir,
+        args.clippy,
+        args.no_default_features,
+        args.features,
+    )?;
 
     loop {
         select! {
